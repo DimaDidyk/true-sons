@@ -1,0 +1,242 @@
+$(document).ready(function () {
+    const customProduct = {
+        moneyFormatNoDecimals: '\$\{\{amount_no_decimals\}\}',
+        galleryThumbsOptions: function (){
+            return {
+                spaceBetween: 17,
+                slidesPerView: 'auto',
+                direction: 'vertical',
+                freeMode: true,
+                watchSlidesVisibility: true,
+                watchSlidesProgress: true,
+            }
+        },
+        galleryTopOptions: function(galleryThumbs){
+            return {
+                spaceBetween: 0,
+                thumbs: {
+                    swiper: galleryThumbs
+                }
+            }
+        },
+        accordionInit: function (){
+            // product custom - accordion
+            $('.accordion-item .accordion-heading').click(function () {
+                $(this).parent().toggleClass('accordion-opened');
+            });
+        },
+        popupInit: function (){
+            $('#product-custom-popup .close').click(function () {
+                $('#product-custom-popup').hide();
+            });
+            $('.open-popup-text').click(function () {
+                $('#product-custom-popup').show();
+            });
+        },
+        tabActions: function (){
+            $('.button-next-tab').click(function () {
+                $('.tab-content-item, .tab-item').removeClass('active');
+                $('div[tab-name="summary-tab"]').addClass('active');
+                let tabsOffsetTop = document.getElementById('product-tabs-anchor').offsetTop;
+                tabsOffsetTop = tabsOffsetTop - 25;
+                $('body,html').animate({scrollTop: tabsOffsetTop}, 600);
+            });
+
+            $('.tab-item').click(function () {
+                $('.tab-content-item, .tab-item').removeClass('active');
+                let tabName = $(this).attr('tab-name');
+                $('div[tab-name="' + tabName + '"]').addClass('active');
+            });
+        },
+
+        /**
+         * Remove all items in the cart
+         * @param callback {function}
+         */
+        clearCart: function (callback){
+            $.ajax({
+                type: "POST",
+                url: '/cart/clear.js',
+                success: function(){
+                    callback();
+                },
+                dataType: 'json'
+            });
+        },
+
+        /**
+         * getCollectionProducts
+         * @param collectionHandle {string}
+         * @returns {Promise<object>}
+         */
+        getCollectionProducts: function (collectionHandle){
+            return new Promise(function(resolve, reject){
+                try {
+                    $.getJSON('/collections/' + collectionHandle + '/products.json', resolve);
+                }catch (e){
+                    reject(e);
+                }
+            });
+        },
+
+        /**
+         * updateGallery
+         * @param sliderImages {object}
+         * @param galleryThumbs {Swiper}
+         * @param galleryTop {Swiper}
+         */
+        updateGallery: function (sliderImages, galleryThumbs, galleryTop){
+            if( sliderImages.length > 1 ){
+                galleryThumbs.removeAllSlides();
+                galleryTop.removeAllSlides();
+                for (let index in sliderImages) {
+                    if(index != 0){
+                        galleryThumbs.addSlide(index, '<div class="swiper-slide product-thumb-slide"><img src="'+sliderImages[index].src+'"></div>');
+                        galleryTop.addSlide(index, '<div class="swiper-slide product-media-slide"><img src="'+sliderImages[index].src+'"></div>');
+                    }
+                }
+            }else{
+                galleryThumbs.removeAllSlides();
+                galleryTop.removeAllSlides();
+            }
+        },
+
+        getPricePerBottle: function(totalPrice, bottlesQty){
+            return window.theme.Currency.formatMoney(Number(totalPrice) / Number(bottlesQty), this.moneyFormatNoDecimals);
+        },
+
+        /**
+         * Update Shade Tab
+         * @param activeProducts
+         * @param products
+         */
+        updateShadeTab: function (activeProducts, products){
+            $('.product-item').removeClass('active');
+            if( activeProducts.length !== 0 ){
+                for (let index in activeProducts) {
+                    activeProducts[index].activeItem.addClass('active');
+                    activeProducts[index].activeItem.find('.active-variant-value').text(activeProducts[index].bottlesQty);
+                    activeProducts[index].activeItem.find('.per-bottle-value').text(
+                        this.getPricePerBottle(activeProducts[index].price, activeProducts[index].bottlesQty)
+                    );
+                    $('.tab-subtext').html(products[activeProducts[index].index].body_html);
+                    $('.button-next-tab').removeClass('disabled');
+                }
+            }else{
+                $('.button-next-tab').addClass('disabled');
+            }
+        },
+
+        selectProductTemplate: function (product, qty, price){
+            return '<div class="selected-product">'+
+                '<img src="'+ product.images[0].src +'" alt="'+ product.title +'" class="product-item-image">'+
+                '<div class="product-title align--center product-title-value">'+ product.title +'</div>'+
+                '<div class="active-variant">'+
+                  '<div><span class="active-variant-value">'+ qty +'</span> Bottles</div>'+
+                  '<span class="per-bottle"><span class="per-bottle-value">'+ this.getPricePerBottle(price, qty) +'</span> per bottle </span>'+
+                '</div>'+
+             '</div>';
+        },
+
+        updateSummaryTab: function (activeProducts, products){
+            let bottlesQty = 0;
+            let totalPrice = 0;
+            $('#selected-products').html('');
+            let activeProductsHTML = '';
+            for (let product of activeProducts) {
+
+                activeProductsHTML += this.selectProductTemplate(products[product.index], product.bottlesQty, product.price);
+                bottlesQty += Number(product.bottlesQty);
+                totalPrice += Number(product.price);
+            }
+            $('#selected-products').html(activeProductsHTML);
+            $('.bottles-value').text(bottlesQty);
+            $('.price-per-bottle-value').text(window.theme.Currency.formatMoney(totalPrice, this.moneyFormatNoDecimals));
+        },
+
+        changeShadeHandler: function (galleryThumbs, galleryTop){
+            const _this = this;
+            const activeProducts = [];
+            this.customAddToCart(activeProducts);
+            this.getCollectionProducts('bundle').then(function (collectionProducts){
+                $('.products-list').removeClass('disabled');
+                const products = collectionProducts.products;
+                if( products.length > 0 ){
+
+                    // remove item
+                    $('.disable-variant').click( function (){
+                        let index = $(this).attr('index');
+                        let findIndex = activeProducts.findIndex(function (product){
+                            return product.index == index;
+                        });
+                        if(findIndex >= 0 ){
+                            activeProducts.splice(findIndex, 1);
+                            _this.updateShadeTab(activeProducts, products);
+                            _this.updateSummaryTab(activeProducts, products);
+                        }
+                    });
+
+                    // add item
+                    $('.variant-item').click(function (){
+                        let index = $(this).attr('index');
+                        let productData = {
+                            index: index,
+                            activeItem: $('.product-item[index="'+index+'"]'),
+                            variantId: $(this).attr('variant-id'),
+                            bottlesQty: $(this).attr('variant-title'),
+                            price: $(this).attr('variant-price'),
+                        };
+                        let findProductIndex = activeProducts.findIndex(function (product){
+                            return product.index == index;
+                        });
+                        if( findProductIndex < 0 ){
+                            activeProducts.push(productData);
+                        }else{
+                            activeProducts.splice(findProductIndex, 1, productData);
+                        }
+                        const sliderImages = products[productData.index].images;
+                        _this.updateGallery(sliderImages, galleryThumbs, galleryTop);
+                        _this.updateShadeTab(activeProducts, products);
+                        _this.updateSummaryTab(activeProducts, products);
+                        _this.updateIngredients(products[productData.index].handle);
+                    });
+                }
+            });
+        },
+
+        updateIngredients: function (productHandle){
+            console.log(productHandle);
+            $('.ingredients-content').removeClass('active');
+            $('.ingredients-content.'+ productHandle).addClass('active');
+        },
+
+        customAddToCart: function (activeProducts){
+            $('#custom-add-button').click((function (){
+                this.clearCart(function (){
+                    let data = { items: [] };
+                    for (let activeProduct of activeProducts) {
+                        data.items.push({
+                            quantity: 1,
+                            id: activeProduct.variantId
+                        });
+                    }
+                    $.post('/cart/add.js', data, null, "json").done(function(){
+                        window.location = "/checkout/";
+                    }).fail(function(error) {
+                        console.log(error.status);
+                    });
+                });
+            }).bind(this));
+        },
+
+        init: function (){
+            this.accordionInit();
+            this.popupInit();
+            this.tabActions();
+            const galleryThumbs = new Swiper('#custom-product-thumbs', this.galleryThumbsOptions());
+            const galleryTop = new Swiper('#custom-product-gallery', this.galleryTopOptions(galleryThumbs));
+            this.changeShadeHandler(galleryThumbs, galleryTop);
+        }
+    }
+    customProduct.init();
+});

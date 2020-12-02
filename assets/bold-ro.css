@@ -1,0 +1,6 @@
+.onetime-address, .sub-address {
+    margin-top: 1.5em;
+    border: black 1px solid;
+    padding: .5em;
+  text-align: center;
+}

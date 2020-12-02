@@ -1,0 +1,116 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400|Oswald:400|Roboto:400&display=swap"><link rel="stylesheet" href="https://cdn.pagefly.io/pagefly/2.12.0/css/main-style.css?t=20200614120639"><link rel="stylesheet" href="{{ 'pagefly.85a5a537.scss.css' | asset_url }}">
+		  <div class="__pf" id="__pf"><div data-pf-type="Body" class="sc-pRgDJ fzXWJx pf-daf1b1f3"><div data-pf-type="Layout" class="pf-a116dbb9"><div data-container="true" class="sc-pZopv bjKdkd pf-c285a5a5" data-pf-type="Section"><div style="max-width: 1170px;" class="sc-pQQXS iWCqut"><div class="sc-qPjXN eYzxUD pf-16dbb9da pf-r pf-r-eh" style="--pf-s-lg:15px; --pf-s-md:15px; --pf-s-sm:15px; --pf-s-xs:15px;" data-pf-type="Row"><div class="sc-pbYdQ jklmHY pf-c pf-c-xs--12 pf-c-sm--12 pf-c-md--12 pf-c-lg--12"><div class="sc-pkUyL fTyjzF pf-dbb9daf1" data-pf-type="Column"><div data-pf-type="Custom.HTML" class="sc-pciXn kKVZfa pf-b9daf1b1"><div class="ow-contact-page">
+  <div class="page-width">
+    <div class="grid">
+      <div class="grid__item medium-up--five-sixths medium-up--push-one-twelfth">
+        <div class="section-header text-center">
+          <h1>Contact us</h1>
+        </div>
+
+        <div class="ow-contact-subtext text-center">
+          {% comment %}
+          <p>Okay, in full disclosure: we’re just two middle aged bald guys with a little bit of hair envy and a big idea.  We wanted to help fellow bros look and feel amazing.  In a nutshell, that’s how <br>True Sons foam dye was found.</p> 
+          {% endcomment %}
+          <p>We want to hear from you. Don’t hesitate to message us with questions, complaints, or praise. We want to hear it all. Thanks, man. </p>
+          <a class="ow-mailto" href="mailto:support@truesons.com">support@truesons.com</a>
+        </div>
+
+        {% if page.content.size > 0 %}
+          <div class="rte">
+            {{ page.content }}
+          </div>
+        {% endif %}
+
+        <div class="contact-form form-vertical">
+          {% form 'contact' %}
+
+            {% if form.posted_successfully? %}
+              <p class="note form-success">
+                {{ 'contact.form.post_success' | t }}
+              </p>
+            {% endif %}
+
+            {{ form.errors | default_errors }}
+
+            <label for="ContactFormName">{{ 'contact.form.name' | t }}</label>
+            <input type="text" id="ContactFormName" name="contact[name]" value="{% if form[name] %}{{ form[name] }}{% elsif customer %}{{ customer.name }}{% endif %}">
+
+            <label for="ContactFormEmail" class="{% if form.errors contains 'email' %}label--error{% endif %}">{{ 'contact.form.email' | t }}</label>
+            <input type="email" id="ContactFormEmail" name="contact[email]" autocorrect="off" autocapitalize="off" value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}" class="{% if form.errors contains 'email' %}input--error{% endif %}">
+
+			<label for="ContactFormSubject">Subject</label>
+			<input type="text" id="ContactFormSubject" value="{% if form.subject %}{{ form.subject }}{% endif %}" name="contact[subject]">	
+          
+            <label for="ContactFormMessage">{{ 'contact.form.message' | t }}</label>
+            <textarea rows="10" id="ContactFormMessage" name="contact[body]">{% if form.body %}{{ form.body }}{% endif %}</textarea>
+
+          <div class="ow-contact-upload-text">
+            <p><strong>Not sure of your shade?</strong></p>
+            <p>Send us a selfie  and we’ll get you sorted. </p>
+            <p class="ow-fileupload-f18">
+              - Upload 1 - 3 photos in close up  (Max size = 5 MB) <br>
+              - Shoot in daylight / natural light for best results <br>
+              - Smile
+            </p>
+          </div>
+          <div class="form-footer">
+            <label for="FileUpload" class=""><img src="https://cdn.shopify.com/s/files/1/1600/5339/files/selfie-icon.png?v=1592007363"><br><span class="ow-upload-btn-text">Upload image</span></label>
+            <input type="file" id="FileUpload" accept=".png,.jpg,.jpeg,.gif,.tif,.jif,.jfif" name="file[upload]" multiple="">
+
+
+
+            <!--<input type="input" id="contact_truesons" class="btn" value="{{ 'contact.form.submit' | t }}">-->
+          
+            <input id="contact_truesons_2" type="submit" class="btn" value="{{ 'contact.form.submit' | t }}">
+
+          </div>
+          {% endform %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>  
+  function getCookie(name)
+  {
+    var re = new RegExp(name + "=([^;]+)");
+    var value = re.exec(document.cookie);
+    return (value != null) ? unescape(value[1]) : null;
+  }
+  $('#contact_truesonsoff').on('click', function(event){
+	event.preventDefault();
+    $.getJSON("https://jsonip.com?callback=?", function(ips) {
+      
+	document.cookie = "hubspotutk=contact";
+    document.cookie = "hutk=contact";
+          var person = {
+              name: $('#ContactFormName').val(),
+              email:$('#ContactFormEmail').val(),
+              subject:$('#ContactFormSubject').val(),
+              message:$('#ContactFormMessage').val(),
+              'hs_context': JSON.stringify({
+                  "hutk": getCookie('hubspotutk'),
+                  "ipAddress": ips.ip,
+                  "pageUrl": "https://truesons.com/pages/contact",
+                  "pageName": "Contact - True Sons"
+              })
+          };
+          console.log('ms-person ' + person);
+          $.post( "https://forms.hubspot.com/uploads/form/v2/5265829/86097e96-27af-4075-b738-ec01f448994d", person ).done(function( data ) {
+            
+          });
+                console.log('??');
+
+      setTimeout(
+      function() 
+      {
+        $('#contact_form').submit();
+      }, 5000);
+
+      });
+    	
+  });
+</script></div></div></div></div></div></div></div></div></div><script>
+					window.__pagefly_setting__={"baseURL":"https://apps.pagefly.io","analyticsURL":"https://analytics.pagefly.io","isBackend":false,"cdnURL":"https://cdn.pagefly.io","pageflyVersion":"2.12.0","shopDomain":"true-sons-tl.myshopify.com","elementData":{},"pageTitle":"Contact","pageType":"page","pageId":"85a5a537-b1bd-40b2-ba48-b17f3b8d7e35","lazyLoad":false,"imageLazyLoad":false,"nativeImageLazyLoad":true,"trackingIDs":[]};
+					window.__pagefly_setting__.moneyFormat = {{shop.money_format | json}}
+				</script><script src="https://cdn.pagefly.io/pagefly/2.12.0/core/helper.js?t=20200614120639" defer></script>
