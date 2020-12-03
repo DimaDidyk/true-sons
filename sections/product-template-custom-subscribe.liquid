@@ -1,3 +1,12 @@
+{% assign current_product_short_title = product.title | split: ' -' | first %}
+{% assign current_product_short_title_handleize = current_product_short_title | split: ' -' | first | handleize %}
+{% for product in collections['bundle-subscribe'].products %}
+  {% if product.title contains current_product_short_title and product.tags contains 'one_time' %}
+    {% assign one_time_product = product %}
+  {% endif %}
+{% endfor %}
+<br>
+
 <div class="product-template__container custom-template-custom page-width"
   id="ProductSection-{{ section.id }}"
   data-section-id="{{ section.id }}"
@@ -7,13 +16,13 @@
   <div class="product-content">
     <div class="product-content-left-side">
 
-      {% if product.images.size > 1 %}
+      {% if product.images.size > 2 %}
         <div class="product-custom-gallery">
           <!-- Swiper product-gallery -->
           <div class="swiper-container" id="custom-product-gallery">
             <div class="swiper-wrapper">
               {%- for media in product.media -%}
-                {% if media.position != 1 %}
+                {% if media.position > 2 %}
                   <div class="swiper-slide product-media-slide">
                     {% include 'media-product-custom', media: media %}
                   </div>
@@ -26,7 +35,7 @@
           <div class="swiper-container" id="custom-product-thumbs">
             <div class="swiper-wrapper">
               {%- for media in product.media -%}
-                {% if media.position != 1 %}
+                {% if media.position > 2 %}
                   <div class="swiper-slide product-thumb-slide">
                     {% include 'media-product-custom', media: media %}
                   </div>
@@ -51,9 +60,13 @@
             <h3>Ingredients {% include 'arrow-svg' %}</h3>
           </div>
           <div class="accordion-content ingredients">
+            <p class="ingredients-content active">
+              Water (Aqua), Ethanolamine, Isobutane, Toluene-2,5-diamine Sulfate, Resorcinol, Emulsifying Wax Nf, N, N Bis(2-hydroxyethyl)-P-Phenylenediamine Sulfate, Glycolstearate, Sodium Cocoyl Isethionate, Sd Alcohol 40 (Alcohol Denat.), Propane, Sodium Laureth Sulfate, Fragrance, Sodium Lauryl Sulfate, M-aminophenol, Tetrasodium Edta, P-aminophenol, Ascorbic Acid, 2,4 Diaminophenoxyethanol HCl, 2-methylresorcinol.
+            </p>
+
             {% for block in section.blocks %}
               {% assign block_product_title = block.settings.product-title | handleize %}
-              <p class="ingredients-content {{ block_product_title }}{% if product.handle == block_product_title %} active{% endif %}">
+              <p class="ingredients-content {{ block_product_title }}{% if current_product_short_title_handleize == block_product_title %} active{% endif %}">
                 {{ block.settings.ingredients | strip_html }}
               </p>
             {% endfor %}
@@ -74,34 +87,24 @@
 
         <div class="tabs-content">
           <div class="tab-content-item active" tab-name="select-tab">
-            <div class="products-list disabled">
-              {% for product in collections['bundle'].products %}
-                {% assign product_index = forloop.index0 %}
-                <div class="product-item" index="{{ product_index }}">
-                    <div class="disable-variant" index="{{ product_index }}">
-                      <img src="{{ product.featured_image | img_url: '100x100' }}" alt="{{ product.title }}" class="product-item-image">
-                      <div class="product-title align--center">{{ product.title }}</div>
-                    </div>
-                    <div class="product-variants">
-                      {% for variant in product.variants %}
-                        <div class="variant-item"
-                             index="{{ product_index }}"
-                             variant-id="{{ variant.id }}"
-                             variant-price="{{ variant.price }}"
-                             variant-title="{{ variant.title }}"
-                        >{{ variant.title }} Bottles
-                          <span class="per-bottle">{{ variant.price | divided_by: variant.title | money_without_trailing_zeros  }} per bottle </span>
-                      	</div>
-                      {% endfor %}
-                    </div>
-                    <div class="active-variant"><span class="active-variant-value">{{ product.selected_variant.title }}</span> Bottles
-                  		<span class="per-bottle"><span class="per-bottle-value"></span> per bottle </span>
-                  	</div>
-                </div>
+            <div class="products-list">
+              {% for product in collections['bundle-subscribe'].products %}
+                {% if product.title contains 'monthly' or product.title contains 'Original' %}
+                  {% assign product_index = forloop.index0 %}
+                  <div class="product-item {% if product.id == current_product_id %}active{% endif %}" index="{{ product_index }}">
+                    <a href="{{ product.url }}">
+                      <div class="disable-variant" index="{{ product_index }}">
+                        <img src="{{ product.images[1] | img_url: '100x100' }}" alt="{{ product.title }}" class="product-item-image">
+                        <div class="product-title align--center">{{ product.title | split: ' -' | first }}</div>
+                      </div>
+                    </a>
+                  </div>
+                {% endif %}
               {% endfor %}
             </div>
 
-            <div class="btn button-next-tab disabled">Next</div>
+            <div class="btn button-next-tab{% if product.tags contains 'one_time' %} disabled{% endif %}">Next</div>
+
             <div class="open-popup-text align--center open-popup">How True Sons is different</div>
             <div class="tab-subtext">
               {{ product.content }}
@@ -109,30 +112,49 @@
           </div>
 
           <div class="tab-content-item" tab-name="summary-tab">
-            <div id="selected-products"></div>
-
-            <div class="custom-subscribe-box">
-
-              {% comment %}
-              <input type="hidden" class="bottles-qty" value="{{ product.selected_variant.title }}">
+            <div class="selected-product">
+              <img src="{{ product.images[1] | img_url: '100x100' }}" alt="{{ current_product_short_title }}" class="product-item-image">
+              <div class="product-title align--center product-title-value">{{ current_product_short_title }}</div>
+            </div>
+            <div class="custom-subscribe-box custom-subscribe-box-double">
               <div class="subscribe-plan subscribe-save-plan active" plan-value="1">
-                <div class="title">Subscribe & Save (<span class="percent-value">PERCENT</span>)</div>
+                <div class="title">Subscribe & Save (<span class="percent-value">33%</span>)</div>
                 <div class="info">{{ product.selected_variant.title }} bottles recurring</div>
-                <div class="price"><span class="price-value">PRICE</span></div>
+                <div class="price">
+                  <span class="price-value">{{ product.selected_or_first_available_variant.price | plus: 1 | divided_by: 2 | money_without_trailing_zeros  }}</span>
+                  <br><span class="sub">(per bottle)</span>
+                </div>
                 <div class="desc">
-                  <p><span class="priceDiscount-value">PRICE</span> per order. We ship {{ product.selected_variant.title }} bottles every other month.</p>
+                  <p><span class="priceDiscount-value">{{ product.selected_or_first_available_variant.price | money_without_trailing_zeros  }}</span> per order. We ship {{ product.selected_variant.title }} bottles every other month.</p>
                 </div>
-              </div>{% endcomment %}
+              </div>
 
-              <div class="subscribe-plan subscribe-single-plan active" plan-value="0">
-                <div class="title"><span class="bottles-value">{{ product.selected_variant.title }}</span> bottles</div>
-                <div class="price"><span class="price-per-bottle-value"></span>
-                  {% comment %}<br><span class="sub">(per bottle)</span>{% endcomment %}
+              <div class="subscribe-plan subscribe-single-plan" plan-value="0">
+                <div class="title">SINGLE PLAN</div>
+                <div class="info">2 bottles one-time purchase</div>
+                <div class="price"><span class="price-per-bottle-value">{{ one_time_product.selected_or_first_available_variant.price | plus: 1 | divided_by: 2 | money_without_trailing_zeros }}</span>
+                  <br><span class="sub">(per bottle)</span>
                 </div>
+                <div class="desc">{{ one_time_product.selected_or_first_available_variant.price | money }}. We ship 2 bottles in your order.</div>
               </div>
             </div>
 
-            <button class="btn" id="custom-add-button">Add To Cart</button>
+            {% form "product", product %}
+              <div class="hide">
+                <select name="id">
+                  {% for variant in product.variants %}
+                    <option {% if variant == product.selected_or_first_available_variant %} selected="selected" {% endif %}  value="{{ variant.id }}">{{ variant.title }} - {{ variant.price | money }}</option>
+                  {% endfor %}
+                </select>
+                <input type="text" value="1" name="quantity" />
+                <div class="ro_widget"></div>
+              </div>
+              <button type="submit" class="btn add-subscribe addtocart hide" name="add">Add To Cart</button>
+              <div class="btn add-one-time"
+                   id="add-one-time"
+                   style="display: none"
+                   product-id="{{ one_time_product.selected_or_first_available_variant.id }}">Add To Cart</div>
+            {% endform %}
 
           </div>
         </div>

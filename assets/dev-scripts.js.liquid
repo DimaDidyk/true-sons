@@ -40,6 +40,8 @@ $(document).ready(function () {
                 let tabsOffsetTop = document.getElementById('product-tabs-anchor').offsetTop;
                 tabsOffsetTop = tabsOffsetTop - 25;
                 $('body,html').animate({scrollTop: tabsOffsetTop}, 600);
+
+                $('.btn.button').text('Add to cart');
             });
 
             $('.tab-item').click(function () {
@@ -90,7 +92,7 @@ $(document).ready(function () {
                 galleryThumbs.removeAllSlides();
                 galleryTop.removeAllSlides();
                 for (let index in sliderImages) {
-                    if(index != 0){
+                    if(index > 2 ){
                         galleryThumbs.addSlide(index, '<div class="swiper-slide product-thumb-slide"><img src="'+sliderImages[index].src+'"></div>');
                         galleryTop.addSlide(index, '<div class="swiper-slide product-media-slide"><img src="'+sliderImages[index].src+'"></div>');
                     }
@@ -132,10 +134,10 @@ $(document).ready(function () {
                 '<img src="'+ product.images[0].src +'" alt="'+ product.title +'" class="product-item-image">'+
                 '<div class="product-title align--center product-title-value">'+ product.title +'</div>'+
                 '<div class="active-variant">'+
-                  '<div><span class="active-variant-value">'+ qty +'</span> Bottles</div>'+
-                  '<span class="per-bottle"><span class="per-bottle-value">'+ this.getPricePerBottle(price, qty) +'</span> per bottle </span>'+
+                '<div><span class="active-variant-value">'+ qty +'</span> Bottles</div>'+
+                '<span class="per-bottle"><span class="per-bottle-value">'+ this.getPricePerBottle(price, qty) +'</span> per bottle </span>'+
                 '</div>'+
-             '</div>';
+                '</div>';
         },
 
         updateSummaryTab: function (activeProducts, products){
@@ -229,13 +231,58 @@ $(document).ready(function () {
             }).bind(this));
         },
 
+        customSubscribeTemplate: {
+            init: function (){
+                this.changePlan();
+                this.addOneTimeProduct();
+            },
+            changePlan: function (){
+                $('.custom-subscribe-box-double .subscribe-plan').click(function (){
+                    $('.custom-subscribe-box-double .subscribe-plan').removeClass('active');
+                    $(this).addClass('active');
+                    let planValue = $(this).attr('plan-value');
+                    if(planValue == 0){
+                        $('.btn.button').hide();
+                        $('.add-one-time').show();
+                    }
+                    if(planValue == 1){
+                        $('.btn.button').show();
+                        $('.add-one-time').hide();
+                    }
+                });
+            },
+            addOneTimeProduct: function() {
+                const buttonOneTime = $('#add-one-time');
+                buttonOneTime.click((function (){
+                    customProduct.clearCart(function (){
+                        console.log('addToCart');
+                        let data = { items: [] };
+                        let productId = buttonOneTime.attr('product-id');
+                        data.items.push({
+                            quantity: 1,
+                            id: productId
+                        });
+                        buttonOneTime.text('Adding...');
+                        $.post('/cart/add.js', data, null, "json").done(function(){
+                            buttonOneTime.text('Thank you!');
+                            window.location = "/checkout/";
+                        }).fail(function(error) {
+                            console.log(error.status);
+                        });
+                    });
+                }).bind(this));
+            },
+        },
+
+
         init: function (){
             this.accordionInit();
             this.popupInit();
             this.tabActions();
             const galleryThumbs = new Swiper('#custom-product-thumbs', this.galleryThumbsOptions());
             const galleryTop = new Swiper('#custom-product-gallery', this.galleryTopOptions(galleryThumbs));
-            this.changeShadeHandler(galleryThumbs, galleryTop);
+            // this.changeShadeHandler(galleryThumbs, galleryTop);
+            this.customSubscribeTemplate.init();
         }
     }
     customProduct.init();

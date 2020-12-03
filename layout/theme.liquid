@@ -50,7 +50,7 @@
 
 
   {{ 'theme.scss.css' | asset_url | stylesheet_tag }}
-  {% if template.suffix == "custom" %}
+  {% if template.suffix == "custom" or template.suffix == "custom-subscribe" %}
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     {{ 'dev-styles.scss.css' | asset_url | stylesheet_tag }}
   {% endif %}
@@ -120,7 +120,7 @@
   <script src="{{ 'lazysizes.js' | asset_url }}" async="async"></script>
   <script src="{{ 'vendor.js' | asset_url }}" defer="defer"></script>
   <script src="{{ 'theme.js' | asset_url }}" defer="defer"></script>
-  {% if template.suffix == "custom" %}
+  {% if template.suffix == "custom" or template.suffix == "custom-subscribe" %}
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js" defer="defer"></script>
     <script src="{{ 'dev-scripts.js' | asset_url }}" defer="defer"></script>
   {% endif %}
@@ -130,7 +130,7 @@
   {{ content_for_header }}
 {%- render 'bold-common' -%}
 {%- render 'bold-ro-init' -%}
- {{ 'bold-ro.css' | asset_url | stylesheet_tag }}
+{{ 'bold-ro.css' | asset_url | stylesheet_tag }}
 {% render 'pagefly-header' %}
  </head> 
 
